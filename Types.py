@@ -19,6 +19,7 @@
 
 from __future__ import print_function
 import numpy as np
+eps = 10*np.finfo(np.float32).eps
 
 class MathOperator(object):
     """
@@ -59,12 +60,27 @@ class GeometricTransformation(MathOperator):
 
     def __init__(self,Q,b):
 
-        self.Q = Q
+        if len(b.shape) != 1:
+            raise ValueError("Error: Input vector b is not a vector!")
         dimension = b.size
+        if not np.linalg.norm(np.dot(Q.transpose(),Q) - np.eye(dimension)) < eps:
+            raise ValueError("Error: Q not Orthogonal!")
+        
+        self.Q = Q
+        
         self.b = b.reshape((dimension,1))
 
     def _pythonOP(self,x):
 
         return np.dot(self.Q,x) + self.b
 
+    
+    def inv(self):
+        """
+        Returns the inverse transformation S of T
+        such that S(T(x)) = x for all x.
+        """
+        Q_inv = (self.Q).transpose()
+        b_inv = -np.dot(Q_inv,self.b)
+        return GeometricTransformation(Q_inv,b_inv)
     
