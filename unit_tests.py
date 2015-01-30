@@ -68,7 +68,7 @@ class TypeTests2(object):
         v = np.array([8*cos(-pi/5),8*sin(-pi/5)]); w = np.array([8.0,-pi/5])
         assert norm(polar(v) - w) < eps, "Error: Sector 4 false!"
 
-        nr_tests = 10
+        nr_tests = self.nr_tests
         R = np.random.rand(nr_tests)*nr_tests
         PHI = 2*pi*(np.random.rand(nr_tests)-0.5)
         for i in range(nr_tests):
@@ -105,7 +105,7 @@ class TypeTests2(object):
         v = np.array([8*cos(-pi/5),8*sin(-pi/5)]); w = np.array([8.0,-pi/5])
         assert norm(cart(w) - v) < eps, "Error: Sector 4 false!"
 
-        nr_tests = 10
+        nr_tests = self.nr_tests
         R = np.random.rand(nr_tests)*nr_tests
         PHI = 2*pi*(np.random.rand(nr_tests)-0.5)
         for i in range(nr_tests):
@@ -113,14 +113,43 @@ class TypeTests2(object):
             assert norm(cart(w) - v) < eps, "Error: Random test" + str(i) + " false!"
         
         self.checkTests("CartesianCoordinates",passed)
- 
+
+    def testSphericalCoordinates(self):
+        from Types import SphericalCoordinates
+        pi = np.pi
+        from numpy import sqrt, cos, sin
+        passed = [False]
+        with warnings.catch_warnings(record=True) as warn:
+            sphericalDummy = SphericalCoordinates(method=666)
+            assert issubclass(warn[-1].category, UserWarning)
+            assert self.fallback_warning in str(warn[-1].message)
+        passed[0] = True
+        
+        spher = SphericalCoordinates(method=0)
+        nr_tests = self.nr_tests
+        R = np.random.rand(nr_tests)*nr_tests
+        PHI = 2*pi*(np.random.rand(nr_tests)-0.5)
+        PSI = pi*(np.random.rand(nr_tests))
+        for i in range(nr_tests):
+            v = np.array([R[i]*cos(PHI[i])*sin(PSI[i]),
+                          R[i]*sin(PHI[i])*sin(PSI[i]),
+                          R[i]*cos(PSI[i])]) 
+            w = np.array([R[i],PHI[i],PSI[i]])
+            assert norm(spher(v) - w)  < eps, "Error: Random test" + str(i) + " false!"
+        passed += [True]
+            
+        self.checkTests("SphericalCoordinates",passed)
+
+        
     def __init__(self):
         """
         Method for executing tests.
         """
         self.fallback_warning = "Warning: Make fallback since no other version is implemented!"
+        self.nr_tests = 50
         
         self.testPolarCoordinates()
         self.testCartesianCoordinates()
+        self.testSphericalCoordinates()
 
 TypeTests2()

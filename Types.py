@@ -195,7 +195,7 @@ class CartesianCoordinates(MathOperator):
         y = r*np.sin(phi)
         return np.array([x,y])
     
-def SphericalCoordinates(MathOperator):
+class SphericalCoordinates(MathOperator):
     u"""
     Takes a vector v ∈ ℝ³ given in
     cartesian coordintes v₁ = x,
@@ -204,12 +204,28 @@ def SphericalCoordinates(MathOperator):
     spherical coorinates 
     w₁ = r, w₂ = ϕ, w₃ = ψ. 
     """
-    def __init__(self):
-        pass
+    def __init__(self,method=0):
+
+        try:
+            if method is 0:
+                self._operation = self._pythonOP
+            else:
+                raise NotImplementedError("Error: No other methods implemented yet!")
+        except:
+            self._fallback()
     
     def _pythonOP(self,v):
         if v.size != 3:
             raise ValueError("Error: Dimension is not 3!")
+
+        x = v[0]
+        y = v[1]
+        z = v[2]
         r = np.linalg.norm(v)
-        
+        phi = np.arctan2(y,x)
+        psi = np.arccos(z/r)
+
+        return np.array([r,phi,psi])
+
+    
         
