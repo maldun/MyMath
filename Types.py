@@ -191,6 +191,9 @@ class CartesianCoordinates(MathOperator):
 
         r = w[0]
         phi = w[1]
+        # check data range:
+        if not (-np.pi <= phi <= np.pi):
+            raise ValueError(u"""Error: φ ∉ [-π,π]""")
         x = r*np.cos(phi)
         y = r*np.sin(phi)
         return np.array([x,y])
@@ -202,7 +205,9 @@ class SphericalCoordinates(MathOperator):
     v₂ = y, v₃ = z and returns
     a vector w ∈ ℝ³ given in
     spherical coorinates 
-    w₁ = r, w₂ = ϕ, w₃ = ψ. 
+    w₁ = r, w₂ = φ, w₃ = ψ,
+    with φ ∈ [-π,π] and
+    ψ ∈ [0,π].
     """
     def __init__(self,method=0):
 
@@ -227,5 +232,51 @@ class SphericalCoordinates(MathOperator):
 
         return np.array([r,phi,psi])
 
+class CartesianCoordinates3D(MathOperator):
+    u"""
+    Takes a vector w ∈ ℝ³ given in
+    spherical coorinates 
+    w₁ = r, w₂ = φ, w₃ = ψ,
+    with φ ∈ [-π,π] and
+    ψ ∈ [0,π], and returns a 
+    vector v ∈ ℝ³ given in
+    cartesian coordintes v₁ = x,
+    v₂ = y, v₃ = z. 
+    """
     
+    def __init__(self,method=0):
+
+        try:
+            if method is 0:
+                self._operation = self._pythonOP
+            else:
+                raise NotImplementedError("Error: No other methods implemented yet!")
+        except:
+            self._fallback()
+    
+    def _pythonOP(self,w):
+        u"""
+        This method computes the
+        cartesian coordinates by the formulas 
+        x = r cos(φ)sin(ψ),
+        y = r sin(φ)sin(ψ),
+        z = r cos(ψ).
+        """
+
+        if w.size != 3:
+            raise ValueError("Error: Dimension is not 3!")
+        r = w[0]
+        phi = w[1]
+        psi = w[2]
+        # check data range:
+        if not (-np.pi <= phi <= np.pi):
+            raise ValueError(u"""Error: φ ∉ [-π,π]""")
+        if not (0 <= psi <= np.pi):
+            raise ValueError(u"""Error: ψ ∉ [0,π]""")
+
         
+        x = r*np.cos(phi)*np.sin(psi)
+        y = r*np.sin(phi)*np.sin(psi)
+        z = r*np.cos(psi)
+
+        return np.array([x,y,z])

@@ -89,6 +89,12 @@ class TypeTests2(object):
             assert self.fallback_warning in str(warn[-1].message)
         passed[0] = True
         cart = CartesianCoordinates(method=0)
+        # test wron Input
+        try:
+            cart(np.array((5,7)))
+        except ValueError:
+            passed += [True]
+        
         # test special cases
         v = np.array([0.0,1.0]); w = np.array([1.0,pi/2]) 
         assert norm(cart(w) - v) < eps, "Error: Special case 1 false!"
@@ -140,6 +146,42 @@ class TypeTests2(object):
             
         self.checkTests("SphericalCoordinates",passed)
 
+
+    def testCartesianCoordinates3D(self):
+        from Types import CartesianCoordinates3D
+        pi = np.pi
+        from numpy import sqrt, cos, sin
+        
+        passed = [False]
+        with warnings.catch_warnings(record=True) as warn:
+            cartesianDummy = CartesianCoordinates3D(method=666)
+            assert issubclass(warn[-1].category, UserWarning)
+            assert self.fallback_warning in str(warn[-1].message)
+        passed[0] = True
+        cart = CartesianCoordinates3D(method=0)
+        # test wron Input
+        try:
+            cart(np.array((5,7,0.1)))
+        except ValueError:
+            passed += [True]
+        try:
+            cart(np.array((5,0.1,5)))
+        except ValueError:
+            passed += [True]
+        
+        nr_tests = self.nr_tests
+        R = np.random.rand(nr_tests)*nr_tests
+        PHI = 2*pi*(np.random.rand(nr_tests)-0.5)
+        PSI = pi*(np.random.rand(nr_tests))
+        for i in range(nr_tests):
+            v = np.array([R[i]*cos(PHI[i])*sin(PSI[i]),
+                          R[i]*sin(PHI[i])*sin(PSI[i]),
+                          R[i]*cos(PSI[i])]) 
+            w = np.array([R[i],PHI[i],PSI[i]])
+            assert norm(cart(w) - v)  < eps, "Error: Random test" + str(i) + " false!"
+
+        self.checkTests("CartesianCoordinates3D",passed)
+
         
     def __init__(self):
         """
@@ -151,5 +193,6 @@ class TypeTests2(object):
         self.testPolarCoordinates()
         self.testCartesianCoordinates()
         self.testSphericalCoordinates()
-
+        self.testCartesianCoordinates3D()
+        
 TypeTests2()
