@@ -19,4 +19,7 @@ The goal is to provide functions and classes for common mathematical operations.
 All operations come either in pure Python or with an optional optimized version.
 If no optimized version can is available the pure Python version is used instead, else
 the optimized version is used.
-The Python version has to provided everytime for compability and testing reasons.
+The Python version has to provided everytime for compability and testing reasons,
+or even for performance reasons.
+Each instance tries to find the most effective wy for computation and implements it
+on runtime. 

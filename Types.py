@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 # MyGeom Module - API for easier Salome geompy usage
 # Tools.py: Tool functions for MyGeom module
 #
@@ -18,11 +21,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 from __future__ import print_function
+import warnings
 import numpy as np
 eps = 10*np.finfo(np.float32).eps
 
 class MathOperator(object):
-    """
+    u"""
     Base class for operators. An operator is
     characterized by the fact that it has a call
     method on vectors.
@@ -34,20 +38,33 @@ class MathOperator(object):
         """
         raise NotImplementedError("Error: This class has no Python method!")
     
+    def __call__(self,x):
+        raise NotImplementedError("Error: __call__ method not set yet!")
+
+    def _fallback(self):
+        """
+        If not other functions are implemented make fallback to Python.
+        """
+        warnings.warn("Warning: Make fallback since no other version is implemented!",UserWarning)
+        self.__call__ = self._pythonOP
+
     def _optimizedOP(self,x):
         """
         Optimized (optional) method for math operation.
         """
         raise NotImplementedError("Error: This class has no optimized method!")
         
-    def __call__(self,x):
+    def __init__(self,method=0):
         """
-        General call method for math operators.
+        This __init__ method is reference only to
+        provide a proper example for further classes.
+        params: 
+            method (Integer):
+            method = 0: use Python
+            method = 1: Use optimized version
+            method > 1: Use other alternative methods
         """
-        try:
-            return self._optimizedOP(x)
-        except NotImplementedError:
-            return self._pythonOP(x)
+        self._fallback()
 
 class GeometricTransformation(MathOperator):
     u"""
@@ -58,7 +75,7 @@ class GeometricTransformation(MathOperator):
     where Q ∈ OS₃(ℝ) and b ∈ ℝ³. 
     """
 
-    def __init__(self,Q,b):
+    def __init__(self,Q,b,method=0):
 
         if len(b.shape) != 1:
             raise ValueError("Error: Input vector b is not a vector!")
@@ -67,9 +84,17 @@ class GeometricTransformation(MathOperator):
             raise ValueError("Error: Q not Orthogonal!")
         
         self.Q = Q
-        
         self.b = b.reshape((dimension,1))
 
+        # If exception caught make fallback
+        try:
+            if method is 0:
+                self.__call__ = _pythonOP
+            else:
+                raise NotImplementedError("Error: No other methods implemented yet!")
+        except:
+            self.__call__ = _pythonOP
+            
     def _pythonOP(self,x):
 
         return np.dot(self.Q,x) + self.b
