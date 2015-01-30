@@ -117,6 +117,19 @@ class GeometricTransformation(MathOperator):
         b_inv = -np.dot(Q_inv,self.b)
         return GeometricTransformation(Q_inv,b_inv)
 
+def PolarCoordinates(MathOperator):
+    u"""
+    Takes a vector v ∈ ℝ² given in
+    cartesian coordintes v₁ = x,
+    v₂ = y, and returns
+    a vector w ∈ ℝ² given in
+    polar coorinates 
+    w₁ = r, w₂ = ϕ.
+    """
+
+    
+    
+
 def SphericalCoordinates(MathOperator):
     u"""
     Takes a vector v ∈ ℝ³ given in
