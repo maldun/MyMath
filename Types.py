@@ -186,6 +186,9 @@ class CartesianCoordinates(MathOperator):
         x = r cos(φ),
         y = r sin(φ).
         """
+        if w.size != 2:
+            raise ValueError("Error: Input vector has wrong dimension!")
+
         r = w[0]
         phi = w[1]
         x = r*np.cos(phi)
