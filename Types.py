@@ -116,3 +116,20 @@ class GeometricTransformation(MathOperator):
         Q_inv = (self.Q).transpose()
         b_inv = -np.dot(Q_inv,self.b)
         return GeometricTransformation(Q_inv,b_inv)
+
+def SphericalCoordinates(MathOperator):
+    u"""
+    Takes a vector v ∈ ℝ³ given in
+    cartesian coordintes v₁ = x,
+    v₂ = y, v₃ = z and returns
+    a vector w ∈ ℝ³ given in
+    spherical coorinates 
+    w₁ = r, w₂ = ϕ, w₃ = ψ. 
+    """
+
+    def _pythonOP(self,v):
+        if v.size != 3:
+            raise ValueError("Error: Dimension is not 3!")
+        r = np.linalg.norm(v)
+        
+        
