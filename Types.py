@@ -156,24 +156,7 @@ class PolarCoordinates(MathOperator):
         x = v[0]
         y = v[1]
         r = np.sqrt(x**2 + y**2)
-
-        pi = np.pi
-        if x == 0:
-            if y == 0: 
-                phi = 0.0
-            elif y > 0:
-                phi = pi/2
-            else:
-                phi = -pi/2
-        else:
-            phi = np.arctan(y/x)
-            # sectors 1, 4 stay the same
-            # sectors 2,3:
-            if x < 0:
-                if y >= 0: # sec 2
-                    phi+=pi
-                else: # sec 3
-                    phi=-(pi-phi)
+        phi = np.arctan2(y,x)
 
         return np.array([r,phi])
 
