@@ -41,15 +41,86 @@ class TypeTests2(object):
         print("All " + name + " tests passed!")
     
     def testPolarCoordinates(self):
-
-        passed = [False]
+        from Types import PolarCoordinates
+        pi = np.pi
+        from numpy import sqrt, cos, sin
         
-    
+        passed = [False]
+        with warnings.catch_warnings(record=True) as warn:
+            polarDummy = PolarCoordinates(method=666)
+            assert issubclass(warn[-1].category, UserWarning)
+            assert self.fallback_warning in str(warn[-1].message)
+        passed[0] = True
+        polar = PolarCoordinates(method=0)
+        # test special cases
+        v = np.array([0.0,1.0]); w = np.array([1.0,pi/2]) 
+        assert norm(polar(v) - w) < eps, "Error: Special case 1 false!"
+        v = np.array([0.0,-2.0]); w = np.array([2.0,-pi/2])
+        assert norm(polar(v) - w) < eps, "Error: Special case 2 false!"
+        passed += [True]
+        # first sector 
+        v = np.array([sqrt(0.5),sqrt(0.5)]); w = np.array([1.0,pi/4])
+        assert norm(polar(v) - w) < eps, "Error: Sector 1 false!"
+        v = np.array([3*cos(7*pi/8),3*sin(7*pi/8)]); w = np.array([3.0,7*pi/8])
+        assert norm(polar(v) - w) < eps, "Error: Sector 2 false!"
+        v = np.array([5*cos(-7*pi/8),5*sin(-7*pi/8)]); w = np.array([5.0,-7*pi/8])
+        assert norm(polar(v) - w) < eps, "Error: Sector 3 false!"
+        v = np.array([8*cos(-pi/5),8*sin(-pi/5)]); w = np.array([8.0,-pi/5])
+        assert norm(polar(v) - w) < eps, "Error: Sector 4 false!"
+
+        nr_tests = 10
+        R = np.random.rand(nr_tests)*nr_tests
+        PHI = 2*pi*(np.random.rand(nr_tests)-0.5)
+        for i in range(nr_tests):
+            v = np.array([R[i]*cos(PHI[i]),R[i]*sin(PHI[i])]); w = np.array([R[i],PHI[i]])
+            assert norm(polar(v) - w) < eps, "Error: Random test" + str(i) + " false!"
+        
+        self.checkTests("PolarCoordinates",passed)
+
+    def testCartesianCoordinates(self):
+        from Types import CartesianCoordinates
+        pi = np.pi
+        from numpy import sqrt, cos, sin
+        
+        passed = [False]
+        with warnings.catch_warnings(record=True) as warn:
+            cartesianDummy = CartesianCoordinates(method=666)
+            assert issubclass(warn[-1].category, UserWarning)
+            assert self.fallback_warning in str(warn[-1].message)
+        passed[0] = True
+        cart = CartesianCoordinates(method=0)
+        # test special cases
+        v = np.array([0.0,1.0]); w = np.array([1.0,pi/2]) 
+        assert norm(cart(w) - v) < eps, "Error: Special case 1 false!"
+        v = np.array([0.0,-2.0]); w = np.array([2.0,-pi/2])
+        assert norm(cart(w) - v) < eps, "Error: Special case 2 false!"
+        passed += [True]
+        # first sector 
+        v = np.array([sqrt(0.5),sqrt(0.5)]); w = np.array([1.0,pi/4])
+        assert norm(cart(w) - v) < eps, "Error: Sector 1 false!"
+        v = np.array([3*cos(7*pi/8),3*sin(7*pi/8)]); w = np.array([3.0,7*pi/8])
+        assert norm(cart(w) - v) < eps, "Error: Sector 2 false!"
+        v = np.array([5*cos(-7*pi/8),5*sin(-7*pi/8)]); w = np.array([5.0,-7*pi/8])
+        assert norm(cart(w) - v) < eps, "Error: Sector 3 false!"
+        v = np.array([8*cos(-pi/5),8*sin(-pi/5)]); w = np.array([8.0,-pi/5])
+        assert norm(cart(w) - v) < eps, "Error: Sector 4 false!"
+
+        nr_tests = 10
+        R = np.random.rand(nr_tests)*nr_tests
+        PHI = 2*pi*(np.random.rand(nr_tests)-0.5)
+        for i in range(nr_tests):
+            v = np.array([R[i]*cos(PHI[i]),R[i]*sin(PHI[i])]); w = np.array([R[i],PHI[i]])
+            assert norm(cart(w) - v) < eps, "Error: Random test" + str(i) + " false!"
+        
+        self.checkTests("CartesianCoordinates",passed)
+ 
     def __init__(self):
         """
         Method for executing tests.
         """
+        self.fallback_warning = "Warning: Make fallback since no other version is implemented!"
+        
         self.testPolarCoordinates()
-
+        self.testCartesianCoordinates()
 
 TypeTests2()

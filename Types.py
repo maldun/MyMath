@@ -117,7 +117,7 @@ class GeometricTransformation(MathOperator):
         b_inv = -np.dot(Q_inv,self.b)
         return GeometricTransformation(Q_inv,b_inv)
 
-def PolarCoordinates(MathOperator):
+class PolarCoordinates(MathOperator):
     u"""
     Takes a vector v ∈ ℝ² given in
     cartesian coordintes v₁ = x,
@@ -132,14 +132,14 @@ def PolarCoordinates(MathOperator):
 
         try:
             if method is 0:
-                self._operation = np.vectorize(self._pythonOP)
+                self._operation = self._pythonOP
             else:
                 raise NotImplementedError("Error: No other methods implemented yet!")
         except:
             self._fallback()
  
         
-    def _pythonOpt(self,v):
+    def _pythonOP(self,v):
         """
         Computes the polar coordinates,
         by the well known formulas.
@@ -150,6 +150,9 @@ def PolarCoordinates(MathOperator):
         ---> x
         3|4
         """
+        if v.size != 2:
+            raise ValueError("Error: Input vector has wrong dimension!")
+        
         x = v[0]
         y = v[1]
         r = np.sqrt(x**2 + y**2)
@@ -167,12 +170,44 @@ def PolarCoordinates(MathOperator):
             # sectors 1, 4 stay the same
             # sectors 2,3:
             if x < 0:
-                if y >= 0:
+                if y >= 0: # sec 2
                     phi+=pi
-                else:
-                    phi=pi-phi
+                else: # sec 3
+                    phi=-(pi-phi)
 
-        return array([r,phi])
+        return np.array([r,phi])
+
+class CartesianCoordinates(MathOperator):
+    u"""
+    Takes a vector w ∈ ℝ² given in
+    polar coordintes w₁ = r, 
+    w₂ = φ with r > 0, and φ ∈ [-π,π],
+    and a vector w ∈ ℝ² given in
+    cartesian coorinates
+    v₁ = x, v₂ = y is returned.
+    """
+    def __init__(self,method=0):
+
+        try:
+            if method is 0:
+                self._operation = self._pythonOP
+            else:
+                raise NotImplementedError("Error: No other methods implemented yet!")
+        except:
+            self._fallback()
+
+    def _pythonOP(self,w):
+        """
+        This method computes the
+        cartesian coordinates by the formulas 
+        x = r cos(φ),
+        y = r sin(φ).
+        """
+        r = w[0]
+        phi = w[1]
+        x = r*np.cos(phi)
+        y = r*np.sin(phi)
+        return np.array([x,y])
     
 def SphericalCoordinates(MathOperator):
     u"""
