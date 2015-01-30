@@ -76,6 +76,8 @@ class GeometricTransformation(MathOperator):
     T(x) = Qx + b
 
     where Q ∈ OS₃(ℝ) and b ∈ ℝ³. 
+    Vectors are assumed to be column vectors.
+    If they are not they get reshaped.
     """
 
     def __init__(self,Q,b,method=0):
