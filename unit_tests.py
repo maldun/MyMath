@@ -41,7 +41,9 @@ class TypeTests2(object):
         print("All " + name + " tests passed!")
     
     def testPolarCoordinates(self):
-        pass
+
+        passed = [False]
+        
     
     def __init__(self):
         """

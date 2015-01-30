@@ -124,12 +124,56 @@ def PolarCoordinates(MathOperator):
     v₂ = y, and returns
     a vector w ∈ ℝ² given in
     polar coorinates 
-    w₁ = r, w₂ = ϕ.
+    w₁ = r, w₂ = φ with r > 0,
+    and φ ∈ [-π,π].
     """
 
-    
-    
+    def __init__(self,method=0):
 
+        try:
+            if method is 0:
+                self._operation = np.vectorize(self._pythonOP)
+            else:
+                raise NotImplementedError("Error: No other methods implemented yet!")
+        except:
+            self._fallback()
+ 
+        
+    def _pythonOpt(self,v):
+        """
+        Computes the polar coordinates,
+        by the well known formulas.
+        We arange the plane in 4 sectors:
+         y
+         ^
+        2|1
+        ---> x
+        3|4
+        """
+        x = v[0]
+        y = v[1]
+        r = np.sqrt(x**2 + y**2)
+
+        pi = np.pi
+        if x == 0:
+            if y == 0: 
+                phi = 0.0
+            elif y > 0:
+                phi = pi/2
+            else:
+                phi = -pi/2
+        else:
+            phi = np.arctan(y/x)
+            # sectors 1, 4 stay the same
+            # sectors 2,3:
+            if x < 0:
+                if y >= 0:
+                    phi+=pi
+                else:
+                    phi=pi-phi
+
+        return array([r,phi])
+    
 def SphericalCoordinates(MathOperator):
     u"""
     Takes a vector v ∈ ℝ³ given in
@@ -139,7 +183,9 @@ def SphericalCoordinates(MathOperator):
     spherical coorinates 
     w₁ = r, w₂ = ϕ, w₃ = ψ. 
     """
-
+    def __init__(self):
+        pass
+    
     def _pythonOP(self,v):
         if v.size != 3:
             raise ValueError("Error: Dimension is not 3!")
