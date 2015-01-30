@@ -39,14 +39,17 @@ class MathOperator(object):
         raise NotImplementedError("Error: This class has no Python method!")
     
     def __call__(self,x):
-        raise NotImplementedError("Error: __call__ method not set yet!")
+        return self._operation(x)
 
     def _fallback(self):
         """
         If not other functions are implemented make fallback to Python.
         """
         warnings.warn("Warning: Make fallback since no other version is implemented!",UserWarning)
-        self.__call__ = self._pythonOP
+        self._operation = self._pythonOP
+
+    def _operation(self,x):
+        raise NotImplementedError("Error: The operation is not set yet!")
 
     def _optimizedOP(self,x):
         """
@@ -77,7 +80,7 @@ class GeometricTransformation(MathOperator):
 
     def __init__(self,Q,b,method=0):
 
-        if len(b.shape) != 1:
+        if (len(b.shape) != 1) and (b.shape[-1] != 1):
             raise ValueError("Error: Input vector b is not a vector!")
         dimension = b.size
         if not np.linalg.norm(np.dot(Q.transpose(),Q) - np.eye(dimension)) < eps:
@@ -86,20 +89,23 @@ class GeometricTransformation(MathOperator):
         self.Q = Q
         self.b = b.reshape((dimension,1))
 
-        # If exception caught make fallback
+        # If exception in creation caught make fallback
         try:
             if method is 0:
-                self.__call__ = _pythonOP
+                self._operation = self._pythonOP
             else:
                 raise NotImplementedError("Error: No other methods implemented yet!")
         except:
-            self.__call__ = _pythonOP
+            self._fallback()
             
     def _pythonOP(self,x):
 
-        return np.dot(self.Q,x) + self.b
+        if len(x.shape) == 1:
+            result = x.reshape((x.size,1))
+        else: 
+            result = x
+        return np.dot(self.Q,result) + self.b
 
-    
     def inv(self):
         """
         Returns the inverse transformation S of T
@@ -108,4 +114,3 @@ class GeometricTransformation(MathOperator):
         Q_inv = (self.Q).transpose()
         b_inv = -np.dot(Q_inv,self.b)
         return GeometricTransformation(Q_inv,b_inv)
-    
