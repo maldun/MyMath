@@ -26,7 +26,7 @@ import numpy as np
 eps = 10*np.finfo(np.float32).eps
 import Types
 
-def givens_qr(A,transposed = False,copy=True):
+def _py_givens_qr(A,transposed = False,copy=True):
     """
     Computes the QR decomposition of
     a matrix A such that Q*R = A
@@ -55,3 +55,8 @@ def givens_qr(A,transposed = False,copy=True):
         return Q, R
     else:
         return Q.transpose(), R 
+
+# function with method selection
+def givens_qr(A,transposed = False,copy=True,method=0):
+    
+    return _py_givens_qr(A,transposed,copy,method)
