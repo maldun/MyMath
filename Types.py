@@ -326,22 +326,27 @@ class GivensRotator(MathOperator):
         
         self.setCosAndSine(c_or_phi,s)
         self.copy = copy
-
+                    
         if method is 0:
             self.matvec = self._pyMatvec
             self._operation = self._pythonOP
             self.computePhi = self._pyComputePhi
         else:
             self._fallback()
-
+            
     def transpose(self):
         u"""
         returns the transposed operator
         G(i,j,φ+π)
         """
-        return GivensRotator(self.i,self.j,self.c,-self.s,
-                             dim = self.shape[0], 
-                             method = self.method, copy=self.copy)
+        if self.i > self.j:
+            return GivensRotator(self.i,self.j,self.c,-self.s,
+                                 dim = self.shape[0], 
+                                 method = self.method, copy=self.copy)
+        else:
+            return GivensRotator(self.i,self.j,self.c,self.s,
+                                 dim = self.shape[0], 
+                                 method = self.method, copy=self.copy)
 
     def inv(self):
         u"""
@@ -389,6 +394,8 @@ class GivensRotator(MathOperator):
         u"""
         If s is None c is assumed to be the angle phi,
         else it is assumed to be cos(phi).
+        If i < j the operator is transposed
+        i.e. the sign of the sine is switched.
         """
         if s is None:
             self.c, self.s = self.computeCosAndSine(c_or_phi)
@@ -397,6 +404,9 @@ class GivensRotator(MathOperator):
                 raise ValueError("Error: Input numbers are not on unit sphere!")
             self.c = c_or_phi
             self.s = s
+        if self.i < self.j: # operator has to be transposed
+            self.s = -self.s
+            
 
     def _pythonOP(self,A):
         u"""
@@ -424,12 +434,9 @@ class GivensRotator(MathOperator):
             
         entry_i = result[self.i]
         entry_j = result[self.j]
-        if self.j < self.i:
-            result[self.i] = self.c*entry_i - self.s*entry_j
-            result[self.j] = self.c*entry_j + self.s*entry_i
-        else:
-            result[self.i] = self.c*entry_i + self.s*entry_j
-            result[self.j] = self.c*entry_j - self.s*entry_i
+
+        result[self.i] = self.c*entry_i - self.s*entry_j
+        result[self.j] = self.c*entry_j + self.s*entry_i
 
         return result
 
@@ -467,7 +474,7 @@ class GivensRotations(MathOperator):
         """
         self.method = method
         if rotations == []:
-            self._rotations = [GivensRotator(0,1,1.0,0.0,
+            self._rotations = [GivensRotator(1,0,1.0,0.0,
                                          dim=dim,method=method,
                                          copy = copy)]
 
@@ -592,7 +599,7 @@ class GivensRotations(MathOperator):
         that for R = G(0,1,φ) ∈ SO(ℝ,2) the
         relation
             
-            R.matvec([a,b].transpose()) = [r,0].transpose(),
+            (R.transpose()).matvec([a,b].transpose()) = [r,0].transpose(),
 
         holds.
 
@@ -602,6 +609,8 @@ class GivensRotations(MathOperator):
         Problem. - 
         LAPACK Working Note 150, University of Tennessee, 
         UT-CS-00-454, December 4, 2000.
+        (As noted above one gets the transposed, this has the
+        background, that this is needed for QR decomposition.)
         """
         if np.abs(a) < eps and np.abs(b) < eps:
             raise NoRotationError("Error: Both values are (numerically) zero!")
@@ -627,7 +636,6 @@ class GivensRotations(MathOperator):
             s = -c*t
             r = a*u
 
-        # the sign of s in the paper is swapped from our definition
         return c,-s,r
 
     
@@ -649,7 +657,7 @@ class GivensRotations(MathOperator):
         a = A[i,i]
         b = A[j,i]
         c,s,r = self.computeRotationParameters(a,b)
-        G = GivensRotator(i,j,c,s)
+        G = GivensRotator(i,j,c,s,dim=self.shape[0],method = self.method,copy=self.copy)
 
         if (not appendRot) and (not applyRot):
             return G
@@ -667,10 +675,13 @@ class GivensRotations(MathOperator):
             result = G(A)
             # set the computed entries hard,
             # to avoid floating point errors.
-            result[i,i] = r
-            result[j,i] = 0
+            # result[i,i] = r
+            # result[j,i] = 0
 
-            return result
+            if appendRot:
+                return result
+            else:
+                return G, result
 
              
         

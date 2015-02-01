@@ -250,13 +250,13 @@ class TypeTests2(object):
         passed[0] = True
 
         # Check creation
-        rot1 = GivensRotator(0,1,0.0)
+        rot1 = GivensRotator(1,0,0.0)
         assert abs(rot1.c-1.0) < eps
         assert abs(rot1.s) < eps
-        rot2 = GivensRotator(0,1,pi/2)
+        rot2 = GivensRotator(1,0,pi/2)
         assert abs(rot2.c-0.0) < eps
         assert abs(rot2.s-1.0) < eps
-        rot3 = GivensRotator(0,1,sqrt(0.5),sqrt(0.5))
+        rot3 = GivensRotator(1,0,sqrt(0.5),sqrt(0.5))
         assert abs(rot3.c-sqrt(0.5)) < eps
         assert abs(rot3.s-sqrt(0.5)) < eps
         passed += [True]
@@ -340,13 +340,13 @@ class TypeTests2(object):
         dim = A.shape[0]
         Q = GivensRotations(dim=dim)
         result = A
-        for i in range(dim):
-            for j in range(i,dim):
+        for i in range(dim-1):
+            for j in range(i+1,dim):
                 result = Q.computeRotation(i,j,result)
 
         Qmat = Q(eye(dim))
         R = result
-        return Qmat, R 
+        return Q.transpose(), Qmat.transpose(), R 
         
     def testGivensRotations(self):
         from Types import GivensRotator
@@ -411,11 +411,12 @@ class TypeTests2(object):
         passed += [True]
 
         for dim in range(2,self.nr_tests//2):
-            for tester in self.nr_tests:
+            for tester in range(self.nr_tests):
                 A = np.random.rand(dim,dim)
 
-                Q,R = self.testGivensRotationsQR(A)
-                assert norm(dot(Q.transpose(),A)-R) < eps
+                Q,Qmat,R = self.testGivensRotationsQR(A)
+                
+                assert norm(Q(R)-A) < eps
         self.checkTests("GivensRotations",passed)
         
     def __init__(self):
