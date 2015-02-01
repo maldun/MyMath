@@ -440,6 +440,7 @@ class GivensRotator(MathOperator):
         has to be extended for GivensRotator.
         """
         self.matvec = self._pyMatvec
+        self.computePhi = self._pyComputePhi
         super(GivensRotator,self)._fallback()
 
     def setCopy(self,copy):

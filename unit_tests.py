@@ -194,6 +194,8 @@ class TypeTests2(object):
             rotDummy = GivensRotator(0,1,0.0,method=666)
             assert issubclass(warn[-1].category, UserWarning)
             assert self.fallback_warning in str(warn[-1].message)
+            rotDummy.matvec
+            rotDummy.getPhi()
         passed[0] = True
 
         # Check creation
