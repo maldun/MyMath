@@ -282,7 +282,7 @@ class CartesianCoordinates3D(MathOperator):
         return np.array([x,y,z])
 
 class NoRotationError(ValueError): 
-    """
+    u"""
     Custom exception class for use
     with givens rotations.
     """
@@ -320,6 +320,8 @@ class GivensRotator(MathOperator):
         matrices in place.
         """
         self.method = method
+        if dim < 2:
+            ValueError("Error: Dimension has to be at least of 2!")
         if i > dim or j > dim:
             raise IndexError("Error: Indices are out of bounds!")
         
@@ -339,7 +341,7 @@ class GivensRotator(MathOperator):
             self._fallback()
 
     def transpose(self):
-        """
+        u"""
         returns the transposed operator
         G(i,j,φ+π)
         """
@@ -348,7 +350,7 @@ class GivensRotator(MathOperator):
                              method = self.method, copy=self.copy)
 
     def inv(self):
-        """
+        u"""
         returns the inverted operator
         G(i,j,φ+π)
         """
@@ -374,7 +376,7 @@ class GivensRotator(MathOperator):
         return np.arctan2(s,c)
 
     def setCosAndSine(self,c_or_phi,s=None):
-        """
+        u"""
         If s is None c is assumed to be the angle phi,
         else it is assumed to be cos(phi).
         """
@@ -387,7 +389,7 @@ class GivensRotator(MathOperator):
         self.s = s
 
     def _pythonOP(self,A):
-        """
+        u"""
         Computes the matrix-matrix
         product G(i,j,φ)A.
         """
@@ -399,9 +401,9 @@ class GivensRotator(MathOperator):
         return np.apply_along_axis(self.matvec,0,result)
 
     def _pyMatvec(self,x):
-        """
+        u"""
         computes the matrix vector
-        product with python pure Python.
+        product with pure Python.
         """
         if copy:
             result = np.copy(x)
@@ -416,18 +418,21 @@ class GivensRotator(MathOperator):
         return result
 
     def matvec(self,x):
-        """
+        u"""
         Meta method for matrix vector multiplication.
         """
         raise NotImplementedError("Error: matvec method not set yet!")
 
     def _fallback(self):
-        """
+        u"""
         Since two levels of optimization are possible the fallback method
         has to be extended for GivensRotator.
         """
         self.matvec = self._pyMatvec
         super(GivensRotator,self)._fallback()
+
+    def setCopy(self,copy):
+        self.copy = copy
 
 class GivensRotations(MathOperator):
     """
@@ -437,12 +442,107 @@ class GivensRotations(MathOperator):
     operator in SO(ℝ,n).
     """
 
-    def __init__(self,method=0):
+    def __init__(self,rotations = [], dim=3,method=0,copy=True):
+        u"""
+        The init method initializes with the identity operator,
+        if the list of operators is empty.
+        The parameters are the same as for givens operators.
         """
-        The init method initializes with the idendity operator.
-        """
-        self._rotations = [GivensRotator()]
+
+        if rotations == []:
+            self._rotations = [GivensRotator(0,1,1.0,1.0,
+                                         dim=dim,method=method,
+                                         copy = copy)]
+
+        else:
+            # make the copy parameter uniform
+            rotations = [G.setCopy(copy) for G in rotations]
+            # check if all dimensions are correct
+            if not all([G.shape[0] is dim for G in rotations]):
+                raise ValueError("Error: There are rotations with wrong dimension!")
+            self._rotations = rotations
+            
+            
         
+        self.shape = (dim,dim)
+        self.size = dim**2
+        
+        self.setCosAndSine(c_or_phi)
+        self.copy = copy
+
+        if method is 0:
+            self.matvec = self._pyMatvec
+            self._operation = self._pythonOP
+        else:
+            self._fallback()
+
+
+    def transpose(self):
+        u"""
+        returns the transposed operator, by using the
+        fact that (A₁,A₂..)* = ...(A₂)*(A₁)
+        """
+        rotations = [rotation.transpose() for rotation in reversed(self._rotations)]
+        rotations = rotations
+        return GivensRotations(rotations=rotations,
+                               dim = self.shape[0], 
+                               method = self.method, copy=self.copy)
+
+    def inv(self):
+        u"""
+        returns the inverted operator
+        G(i,j,φ+π)
+        """
+        return self.transpose()
+
+    def _pythonOP(self,A):
+        u"""
+        Computes the matrix-matrix
+        product G(i,j,φ)A.
+        """
+        if self.copy:
+            result = np.copy(A)
+        else:
+            result = A
+
+        for G in self._rotations:
+            result =  np.apply_along_axis(G.matvec,0,result)
+            
+        return result
+        
+    def _pyMatvec(self,x):
+        u"""
+        computes the matrix vector
+        product with pure Python.
+        """
+        if copy:
+            result = np.copy(x)
+        else:
+            result = x
+
+        for G in self._rotations:
+            result = G.matvec(result)
+        
+        return result
+
+
+    def matvec(self,x):
+        u"""
+        Meta method for matrix vector multiplication.
+        """
+        raise NotImplementedError("Error: matvec method not set yet!")
+
+    def _fallback(self):
+        u"""
+        Since two levels of optimization are possible the fallback method
+        has to be extended for GivensRotator.
+        """
+        self.matvec = self._pyMatvec
+        super(GivensRotations,self)._fallback()
+
+    def setCopy(self,copy):
+        self.copy = copy
+
     
     def computeRotationParameters(self,a,b):
         u"""
@@ -490,5 +590,9 @@ class GivensRotations(MathOperator):
         return c,s,r
 
     
-
+    def computeRotation(self,i,j,A,append=True,apply=True):
+        u"""
+        For a matrix and given indices compute the GivensRotator
+        G(i,j,φ) such that
+        """
     
