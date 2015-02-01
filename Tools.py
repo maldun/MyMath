@@ -26,7 +26,7 @@ import numpy as np
 eps = 10*np.finfo(np.float32).eps
 import Types
 
-def givens_qr(A,transposed = False):
+def givens_qr(A,transposed = False,copy=True):
     """
     Computes the QR decomposition of
     a matrix A such that Q*R = A
@@ -41,8 +41,12 @@ def givens_qr(A,transposed = False):
         return np.array([1.0]), A
         
     Q = Types.GivensRotations(dim=dim)
-    result = A
-    for i in range(dim-1):
+    if copy:
+        result = np.copy(A)
+    else:
+        result = A
+    cols = A.shape[1]
+    for i in range(cols-1):
         for j in range(i+1,dim):
             result = Q.computeRotation(i,j,result)
             
