@@ -473,6 +473,8 @@ class GivensRotations(MathOperator):
         if method is 0:
             self.matvec = self._pyMatvec
             self._operation = self._pythonOP
+            self.computeRotationParameters = self._pyComputeRotationParameters
+            self.computeRotation = self._pyComputeRotation
         else:
             self._fallback()
 
@@ -532,19 +534,34 @@ class GivensRotations(MathOperator):
         """
         raise NotImplementedError("Error: matvec method not set yet!")
 
+    def computeRotationParameters(self,x):
+        u"""
+        Meta method for matrix vector multiplication.
+        """
+        raise NotImplementedError("Error: computeRotationParameters method not set yet!")
+
+    def computeRotation(self,x):
+        u"""
+        Meta method for matrix vector multiplication.
+        """
+        raise NotImplementedError("Error: computeRotation method not set yet!")
+
+    
     def _fallback(self):
         u"""
         Since two levels of optimization are possible the fallback method
         has to be extended for GivensRotator.
         """
         self.matvec = self._pyMatvec
+        self.computeRotationParameters = self._pyComputeRotationParameters
+        self.computeRotation = self._pyComputeRotation
         super(GivensRotations,self)._fallback()
 
     def setCopy(self,copy):
         self.copy = copy
 
     
-    def computeRotationParameters(self,a,b):
+    def _pyComputeRotationParameters(self,a,b):
         u"""
         Provided two numbers a,b
         this method computes the numbers
@@ -590,9 +607,18 @@ class GivensRotations(MathOperator):
         return c,s,r
 
     
-    def computeRotation(self,i,j,A,append=True,apply=True):
+    def _pyComputeRotation(self,i,j,A,append=True,apply=True):
         u"""
-        For a matrix and given indices compute the GivensRotator
-        G(i,j,φ) such that
+        For a matrix A and given indices compute the GivensRotator
+        G(i,j,φ) such that for the reduced Givens rotator 
+        R = G(0,1,φ) ∈ SO(ℝ,2), and r > 0 the relation
+            
+            R.matvec([A[i,i],A[j,i]].transpose()) = [r,0].transpose(),
+
+        holds.
+
+        If append is True the computed rotator is added to the list
+        of rotations, else the rotator is returned.
+        If aplly is True, the rotator is applied immediatly at the matrix.
         """
-    
+        pass
