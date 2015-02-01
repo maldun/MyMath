@@ -280,3 +280,215 @@ class CartesianCoordinates3D(MathOperator):
         z = r*np.cos(psi)
 
         return np.array([x,y,z])
+
+class NoRotationError(ValueError): 
+    """
+    Custom exception class for use
+    with givens rotations.
+    """
+    pass
+    
+class GivensRotator(MathOperator):
+    u"""
+    The givens rotator G = G(i,j,φ) ∈ SO(ℝ,n), (i>j)
+    is defined by the relations of its entries
+    G[k,k] = 1 for k≠i,j, G[i,i] = G[j,j] = cos(φ),
+    G[i,j] = -sin(φ), G[j,i] = sin(φ), and G[k,l] = 0
+    otherwise. 
+    The current implemtation uses the fact that the givens
+    rotator is sparse, and only affects the ith and the jth
+    rows of a matrix.
+    """
+
+    
+    def __init__(self,i,j,c_or_phi,s = None, dim = 3,method=0,copy=True):
+        u"""
+        There are two ways to define the givens
+        rotator:
+          - Provide the angle phi
+          - Provide 2 numbers a,b from which the
+            givens rotator R ∈ SO(ℝ,2) is calculated by the
+            relation 
+            
+            R.matvec([a,b].transpose()) = [r,0].transpose().
+            
+         - provide two numbers c,s which are supposed to be
+           cos(phi) and sin(phi). 
+
+        If no dimension is given it will be assumed to be 3.
+        The parameter copy is set False if one wants to manipulate
+        matrices in place.
+        """
+        self.method = method
+        if i > dim or j > dim:
+            raise IndexError("Error: Indices are out of bounds!")
+        
+        self.i = i
+        self.j = j
+
+        self.shape = (dim,dim)
+        self.size = dim**2
+        
+        self.setCosAndSine(c_or_phi)
+        self.copy = copy
+
+        if method is 0:
+            self.matvec = self._pyMatvec
+            self._operation = self._pythonOP
+        else:
+            self._fallback()
+
+    def transpose(self):
+        """
+        returns the transposed operator
+        G(i,j,φ+π)
+        """
+        return GivensRotator(self.i,self.j,self.c,-self.s,
+                             dim = self.shape[0], 
+                             method = self.method, copy=self.copy)
+
+    def inv(self):
+        """
+        returns the inverted operator
+        G(i,j,φ+π)
+        """
+        return self.transpose()
+    
+    def computeCosAndSine(self,phi):
+        u"""
+        Returns tow numbers C and S
+        with the relations C = cos(phi)
+        and S = sin(phi).
+        """
+        return np.cos(phi), np.sin(phi)
+
+    def computePhi(self,c,s):
+        u"""
+        We compute phi by the fact that
+        it is uniquely defined by the unit
+        vector [c,s] on S¹ with help of arctan2.
+        """
+        if not (c**2 + s**2 < 1 + eps):
+            raise ValueError("Error: Input numbers are not on unit sphere!")
+
+        return np.arctan2(s,c)
+
+    def setCosAndSine(self,c_or_phi,s=None):
+        """
+        If s is None c is assumed to be the angle phi,
+        else it is assumed to be cos(phi).
+        """
+        if s is None:
+            self.c, self.s = self.computeCSFromPhi(c_or_phi)
+        
+        if not (c_or_phi**2 + s**2 < 1 + eps):
+            raise ValueError("Error: Input numbers are not on unit sphere!")
+        self.c = c_or_phi
+        self.s = s
+
+    def _pythonOP(self,A):
+        """
+        Computes the matrix-matrix
+        product G(i,j,φ)A.
+        """
+        if self.copy:
+            result = np.copy(A)
+        else:
+            result = A
+
+        return np.apply_along_axis(self.matvec,0,result)
+
+    def _pyMatvec(self,x):
+        """
+        computes the matrix vector
+        product with python pure Python.
+        """
+        if copy:
+            result = np.copy(x)
+        else:
+            result = x
+            
+        entry_i = result[i]
+        entry_j = result[j]
+        result[i] = self.c*entry_i - self.s*entry_j
+        result[j] = self.c*entry_i + self.s*entry_j
+
+        return result
+
+    def matvec(self,x):
+        """
+        Meta method for matrix vector multiplication.
+        """
+        raise NotImplementedError("Error: matvec method not set yet!")
+
+    def _fallback(self):
+        """
+        Since two levels of optimization are possible the fallback method
+        has to be extended for GivensRotator.
+        """
+        self.matvec = self._pyMatvec
+        super(GivensRotator,self)._fallback()
+
+class GivensRotations(MathOperator):
+    """
+    This class creates and holds a sequence of Givens rotators.
+    It provides a matrix vector multiplication by sequentially
+    applying all Givens rotations. Following from that it is an
+    operator in SO(ℝ,n).
+    """
+
+    def __init__(self,method=0):
+        """
+        The init method initializes with the idendity operator.
+        """
+        self._rotations = [GivensRotator()]
+        
+    
+    def computeRotationParameters(self,a,b):
+        u"""
+        Provided two numbers a,b
+        this method computes the numbers
+        r² = a² + b², c=cos(φ), and s=sin(φ) such
+        that for R = G(0,1,φ) ∈ SO(ℝ,2) the
+        relation
+            
+            R.matvec([a,b].transpose()) = [r,0].transpose(),
+
+        holds.
+
+        The formula comes from the paper
+        Edward Anderson: Discontinuous Plane Rotations
+        and the Symmetric Eigenvalue
+        Problem. - 
+        LAPACK Working Note 150, University of Tennessee, 
+        UT-CS-00-454, December 4, 2000.
+        """
+        if np.abs(a) < eps and np.abs(b) < eps:
+            raise NoRotationError("Error: Both values are (numerically) zero!")
+        
+        if b == 0:
+            c = np.copysign(1,a)
+            s = 0.0
+            r = np.abs(a)
+        elif a == 0:
+            c = 0
+            s = -np.copysign(1,a)
+            r = np.abs(b)
+        elif np.aps(b) > np.abs(a):
+            t = a/b
+            u = np.copysign(np.sqrt(1+t*t),b)
+            s = -1/u
+            c = -s*t
+            r = b*u
+        else:
+            t = b/a
+            u = np.copysign(np.sqrt(1+t*t),a)
+            c = 1/u
+            s = -c*t
+            r = a*u
+
+        return c,s,r
+
+    
+
+    
