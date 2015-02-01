@@ -627,7 +627,7 @@ class GivensRotations(MathOperator):
             s = -c*t
             r = a*u
 
-        # the sign of s in the paper is swapped from ours
+        # the sign of s in the paper is swapped from our definition
         return c,-s,r
 
     

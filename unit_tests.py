@@ -409,7 +409,13 @@ class TypeTests2(object):
             assert abs(s - sin(Phis[i]))<eps
             assert norm(dot(np.array([[c,s],[-s,c]]),np.array([a,b]))-np.array([r,0.0]))<eps
         passed += [True]
-            
+
+        for dim in range(2,self.nr_tests//2):
+            for tester in self.nr_tests:
+                A = np.random.rand(dim,dim)
+
+                Q,R = self.testGivensRotationsQR(A)
+                assert norm(dot(Q.transpose(),A)-R) < eps
         self.checkTests("GivensRotations",passed)
         
     def __init__(self):
