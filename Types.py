@@ -534,13 +534,13 @@ class GivensRotations(MathOperator):
         """
         raise NotImplementedError("Error: matvec method not set yet!")
 
-    def computeRotationParameters(self,x):
+    def computeRotationParameters(self,a,b):
         u"""
         Meta method for matrix vector multiplication.
         """
         raise NotImplementedError("Error: computeRotationParameters method not set yet!")
 
-    def computeRotation(self,x):
+    def computeRotation(self,i,j,A,appendRot = True,applyRot=True):
         u"""
         Meta method for matrix vector multiplication.
         """
@@ -607,7 +607,7 @@ class GivensRotations(MathOperator):
         return c,s,r
 
     
-    def _pyComputeRotation(self,i,j,A,append=True,apply=True):
+    def _pyComputeRotation(self,i,j,A,appendRot=True,applyRot=True):
         u"""
         For a matrix A and given indices compute the GivensRotator
         G(i,j,φ) such that for the reduced Givens rotator 
@@ -617,8 +617,8 @@ class GivensRotations(MathOperator):
 
         holds.
 
-        If append is True the computed rotator is added to the list
+        If appendRot is True the computed rotator is added to the list
         of rotations, else the rotator is returned.
-        If aplly is True, the rotator is applied immediatly at the matrix.
+        If applyrot is True, the rotator is applied immediatly at the matrix.
         """
         pass
