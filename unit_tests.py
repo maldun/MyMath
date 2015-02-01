@@ -24,6 +24,7 @@ from __future__ import print_function
 import warnings
 import numpy as np
 from numpy import ones, dot, eye
+from numpy import cos, sin
 from numpy.linalg import norm
 eps = 10*np.finfo(np.float32).eps
 import warnings
@@ -185,22 +186,47 @@ class TypeTests2(object):
 
         
     def computeGivens(self,i,j,phi,dim):
-            c = cos(phi)
-            s = sin(phi)
-            G = eye(dim)
-            G[i,i] = c
-            G[j,j] = c
-            G[i,j] = -s
-            G[j,i] = s
-            return G
+        c = cos(phi)
+        s = sin(phi)
+        G = eye(dim)
+        G[i,i] = c
+        G[j,j] = c
+        G[i,j] = -s
+        G[j,i] = s
+        return G
         
     def testGivensmatvec(self,i,j,phi,dim):
-            G1 = GivensRotator(i,j,phi,dim=dim)
-            G2 = self.computeGivens(i,j,phi,dim)
-            result = eye(dim)
-            result = np.apply_along_axis(G1.matvec,0,result)
-            result = norm(G2 - result)
-        
+        from Types import GivensRotator
+        G1 = GivensRotator(i,j,phi,dim=dim)
+        G2 = self.computeGivens(i,j,phi,dim)
+        result = eye(dim)
+        result = np.apply_along_axis(G1.matvec,0,result)
+        result = norm(G2 - result)
+        return result < eps
+
+    def testGivensmatmat(self,i,j,phi,dim):
+        from Types import GivensRotator
+        G1 = GivensRotator(i,j,phi,dim=dim)
+        G2 = self.computeGivens(i,j,phi,dim)
+        result = eye(dim)
+        result = G1(result)
+        result = norm(G2 - result)
+        return result < eps
+
+    def testGivensmattrans(self,i,j,phi,dim):
+        from Types import GivensRotator
+        G1 = GivensRotator(i,j,phi,dim=dim)
+        G2 = G1.transpose()
+        G3 = G1.inv()
+        x = np.random.rand(dim)
+        result1 = G1.matvec(x)
+        result2 = norm(G2.matvec(result1) - x)
+        result3 = norm(G3.matvec(result1) - x)
+
+        return result2 < eps and result3 < eps
+
+    
+    
     def testGivensRotator(self):
 
         from Types import GivensRotator
@@ -257,10 +283,40 @@ class TypeTests2(object):
         rot4.setCopy(True)
         assert rot4.copy
            
-        # test correctness of matrix vector multiplication
-        # for dim in range(2,self.nr_tests):
-        #     pass #for i in range(
-        
+        #test correctness of matrix vector multiplication
+        for dim in range(2,self.nr_tests//2):
+            phis = (np.random.rand(self.nr_tests)-0.5)*2*pi
+            for phi in phis:
+                test_vals = [self.testGivensmatvec(i,j,phi,dim) 
+                             for i in range(dim)
+                             for j in range(dim)
+                             if i > j]
+                assert all(test_vals)
+                passed += [True]
+
+        # test matrix-matrix multiplication
+        for dim in range(2,self.nr_tests//2):
+            phis = (np.random.rand(self.nr_tests)-0.5)*2*pi
+            for phi in phis:
+                test_vals = [self.testGivensmatmat(i,j,phi,dim) 
+                             for i in range(dim)
+                             for j in range(dim)
+                             if i > j]
+                assert all(test_vals)
+                passed += [True]
+
+        # test transpose and inverse
+        for dim in range(2,self.nr_tests//2):
+            phis = (np.random.rand(self.nr_tests)-0.5)*2*pi
+            for phi in phis:
+                test_vals = [self.testGivensmattrans(i,j,phi,dim) 
+                             for i in range(dim)
+                             for j in range(dim)
+                             if i > j]
+                assert all(test_vals)
+                passed += [True]
+
+                
         self.checkTests("GivensRotator",passed)
 
     def __init__(self):
@@ -268,7 +324,7 @@ class TypeTests2(object):
         Method for executing tests.
         """
         self.fallback_warning = "Warning: Make fallback since no other version is implemented!"
-        self.nr_tests = 50
+        self.nr_tests = 10
         
         self.testPolarCoordinates()
         self.testCartesianCoordinates()

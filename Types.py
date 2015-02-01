@@ -419,15 +419,15 @@ class GivensRotator(MathOperator):
         computes the matrix vector
         product with pure Python.
         """
-        if copy:
+        if self.copy:
             result = np.copy(x)
         else:
             result = x
             
-        entry_i = result[i]
-        entry_j = result[j]
-        result[i] = self.c*entry_i - self.s*entry_j
-        result[j] = self.c*entry_i + self.s*entry_j
+        entry_i = result[self.i]
+        entry_j = result[self.j]
+        result[self.i] = self.c*entry_i - self.s*entry_j
+        result[self.j] = self.c*entry_j + self.s*entry_i
 
         return result
 
