@@ -182,6 +182,15 @@ class TypeTests2(object):
 
         self.checkTests("CartesianCoordinates3D",passed)
 
+
+    def testGivensRotator(self):
+
+        from Types import GivensRotator
+        pi = np.pi
+        from numpy import sqrt, cos, sin
+        
+        passed = [False]
+
         
     def __init__(self):
         """

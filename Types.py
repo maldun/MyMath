@@ -281,12 +281,6 @@ class CartesianCoordinates3D(MathOperator):
 
         return np.array([x,y,z])
 
-class NoRotationError(ValueError): 
-    u"""
-    Custom exception class for use
-    with givens rotations.
-    """
-    pass
     
 class GivensRotator(MathOperator):
     u"""
