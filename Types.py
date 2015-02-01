@@ -465,7 +465,7 @@ class GivensRotations(MathOperator):
         """
 
         if rotations == []:
-            self._rotations = [GivensRotator(0,1,1.0,1.0,
+            self._rotations = [GivensRotator(0,1,1.0,0.0,
                                          dim=dim,method=method,
                                          copy = copy)]
 
@@ -482,7 +482,6 @@ class GivensRotations(MathOperator):
         self.shape = (dim,dim)
         self.size = dim**2
         
-        self.setCosAndSine(c_or_phi)
         self.copy = copy
 
         if method is 0:

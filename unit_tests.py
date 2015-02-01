@@ -319,6 +319,37 @@ class TypeTests2(object):
                 
         self.checkTests("GivensRotator",passed)
 
+    def testGivensRotationsQR(self,A):
+
+        from Types import GivensRotations
+        dim = A.shape[0]
+        Q = GivensRotations(dim=dim)
+        result = A
+        for i in range(dim):
+            for j in range(i,dim):
+                result = Q.computeRotation(i,j,result)
+
+        Qmat = Q(eye(dim))
+        R = result
+        return Qmat, R 
+        
+    def testGivensRotations(self):
+
+        from Types import GivensRotations
+        pi = np.pi
+        from numpy import sqrt, cos, sin, abs
+        passed = [False]
+        # test creation
+        with warnings.catch_warnings(record=True) as warn:
+            rotDummy = GivensRotations(dim=5,method=666)
+            assert issubclass(warn[-1].category, UserWarning)
+            assert self.fallback_warning in str(warn[-1].message)
+            rotDummy.matvec
+            rotDummy.computeRotation
+            rotDummy.computeRotationParameters
+        passed[0] = True
+        
+        
     def __init__(self):
         """
         Method for executing tests.
@@ -331,5 +362,6 @@ class TypeTests2(object):
         self.testSphericalCoordinates()
         self.testCartesianCoordinates3D()
         self.testGivensRotator()
+        self.testGivensRotations()
         
 TypeTests2()
