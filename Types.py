@@ -619,6 +619,34 @@ class GivensRotations(MathOperator):
 
         If appendRot is True the computed rotator is added to the list
         of rotations, else the rotator is returned.
-        If applyrot is True, the rotator is applied immediatly at the matrix.
+        If applyrot is True, the rotator is applied immediatly at the matrix,
+        and the new matrix is returned.
         """
-        pass
+        a = A[i,i]
+        b = A[j,i]
+        c,s,r = self.computeRotationParameters(a,b)
+        G = GivensRotator(i,j,c,s)
+
+        if (not appendRot) and (not applyRot):
+            return G
+        
+        if appendRot:
+            self._rotations += [G]
+
+        if applyRot:
+            if self.copy:
+                result = np.copy(A)
+            else:
+                result = A
+
+
+            result = G(A)
+            # set the computed entries hard,
+            # to avoid floating point errors.
+            result[i,i] = r
+            result[j,i] = 0
+
+            return result
+
+             
+        
