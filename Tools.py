@@ -27,34 +27,6 @@ eps = 10*np.finfo(np.float32).eps
 import Types
 
 def _py_givens_qr(A,transposed = False,copy=True):
-    """
-    Computes the QR decomposition of
-    a matrix A such that Q*R = A
-    If transposed is True Q.transpose()
-    is returned
-    """
-    if len(A.shape) != 2:
-        raise np.LinAlgError
-    dim = A.shape[0]
-    if dim is 0 or dim is 1:
-        warnings.warn("Warning: Dimension < 2! Q is scalar not GivensRotation!",UserWarning)
-        return np.array([1.0]), A
-        
-    Q = Types.GivensRotations(dim=dim)
-    if copy:
-        result = np.copy(A)
-    else:
-        result = A
-    cols = A.shape[1]
-    for i in range(cols-1):
-        for j in range(i+1,dim):
-            result = Q.computeRotation(i,j,result)
-            
-    R = result
-    if transposed:
-        return Q, R
-    else:
-        return Q.transpose(), R 
 
 # function with method selection
 def givens_qr(A,transposed = False,copy=True,method=0):

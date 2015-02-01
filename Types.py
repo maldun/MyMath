@@ -683,5 +683,51 @@ class GivensRotations(MathOperator):
             else:
                 return G, result
 
-             
+
+class GivensQR(MathOperator):
+    """
+    Computes the QR decomposition of
+    a matrix A such that Q*R = A
+    If transposed is True Q.transpose()
+    is returned
+    """
+    def __init__(self,method=0):
         
+        # If exception in creation caught make fallback
+        try:
+            if method is 0:
+                self._operation = self._pythonOP
+            else:
+                raise NotImplementedError("Error: No other methods implemented yet!")
+        except:
+            self._fallback()
+
+    def _pythonOP(self,x):
+        """
+        Computes the QR decomposition of
+        a matrix A such that Q*R = A
+        If transposed is True Q.transpose()
+        is returned
+        """
+        if len(A.shape) != 2:
+            raise np.LinAlgError
+        dim = A.shape[0]
+        if dim is 0 or dim is 1:
+            warnings.warn("Warning: Dimension < 2! Q is scalar not GivensRotation!",UserWarning)
+            return np.array([1.0]), A
+        
+        Q = Types.GivensRotations(dim=dim)
+        if copy:
+            result = np.copy(A)
+        else:
+            result = A
+            cols = A.shape[1]
+        for i in range(cols-1):
+            for j in range(i+1,dim):
+                result = Q.computeRotation(i,j,result)
+            
+        R = result
+        if transposed:
+            return Q, R
+        else:
+            return Q.transpose(), R 

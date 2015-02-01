@@ -418,6 +418,37 @@ class TypeTests2(object):
                 
                 assert norm(Q(R)-A) < eps
         self.checkTests("GivensRotations",passed)
+
+    def testGivensQR(self):
+        from Types import GivensQR
+        givens_message =  "Warning: Dimension < 2! Q is scalar not GivensRotation!"
+        passed = [False]
+        # test special case for dim = 1
+        with warnings.catch_warnings(record=True) as warn:
+            A1 = np.array([[1.0]])
+            Q1,R1 = GivensQR(A1)
+            assert issubclass(warn[-1].category, UserWarning)
+            assert givens_message in str(warn[-1].message)
+            assert np.all(Q1 == np.array([[1.0]]))
+            assert np.all(R1 == A1)
+        
+        with warnings.catch_warnings(record=True) as warn:
+            A1 = np.array([[1.0,1.0,1.0]])
+            Q1,R1 = GivensQR(A1)
+            assert issubclass(warn[-1].category, UserWarning)
+            assert givens_message in str(warn[-1].message)
+            assert np.all(Q1 == np.array([[1.0]]))
+            assert np.all(R1 == A1)
+
+        passed[0] = True    
+        for i in range(2,self.nr_tests):
+            for j in range(2,self.nr_tests):
+                A = np.random.rand(i,j)
+                Q,R = GivensQR(A)
+                assert norm(Q(R)-A) < eps
+                
+        self.checkTests("GivensQR",passed)
+
         
     def __init__(self,nr_tests):
         """
@@ -443,44 +474,14 @@ class ToolTests(object):
         print("All " + name + " tests passed!")
 
     
-    def testGivensQR(self):
-        from Tools import givens_qr
-        givens_message =  "Warning: Dimension < 2! Q is scalar not GivensRotation!"
-        passed = [False]
-        # test special case for dim = 1
-        with warnings.catch_warnings(record=True) as warn:
-            A1 = np.array([[1.0]])
-            Q1,R1 = givens_qr(A1)
-            assert issubclass(warn[-1].category, UserWarning)
-            assert givens_message in str(warn[-1].message)
-            assert np.all(Q1 == np.array([[1.0]]))
-            assert np.all(R1 == A1)
-        
-        with warnings.catch_warnings(record=True) as warn:
-            A1 = np.array([[1.0,1.0,1.0]])
-            Q1,R1 = givens_qr(A1)
-            assert issubclass(warn[-1].category, UserWarning)
-            assert givens_message in str(warn[-1].message)
-            assert np.all(Q1 == np.array([[1.0]]))
-            assert np.all(R1 == A1)
-
-        passed[0] = True    
-        for i in range(2,self.nr_tests):
-            for j in range(2,self.nr_tests):
-                A = np.random.rand(i,j)
-                Q,R = givens_qr(A)
-                assert norm(Q(R)-A) < eps
-                
-        self.checkTests("givens_qr",passed)
 
     def __init__(self,nr_tests):
 
         self.nr_tests = nr_tests
         
         print("Start Tool Tests ...")
-        self.testGivensQR()
 
 
 nr_tests = 10
 TypeTests2(nr_tests)
-ToolTests(nr_tests)
+# ToolTests(nr_tests)
