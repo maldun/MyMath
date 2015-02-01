@@ -284,11 +284,11 @@ class CartesianCoordinates3D(MathOperator):
     
 class GivensRotator(MathOperator):
     u"""
-    The givens rotator G = G(i,j,φ) ∈ SO(ℝ,n), (i>j)
-    is defined by the relations of its entries
+    The givens rotator G = G(i,j,φ) ∈ SO(ℝ,n), 
+    is defined by the relations of its entries (i>j)
     G[k,k] = 1 for k≠i,j, G[i,i] = G[j,j] = cos(φ),
     G[i,j] = -sin(φ), G[j,i] = sin(φ), and G[k,l] = 0
-    otherwise. 
+    otherwise. If j > i the sign G[i,j] and G[j,i] is switched.
     The current implemtation uses the fact that the givens
     rotator is sparse, and only affects the ith and the jth
     rows of a matrix.
@@ -299,15 +299,9 @@ class GivensRotator(MathOperator):
         u"""
         There are two ways to define the givens
         rotator:
-          - Provide the angle phi
-          - Provide 2 numbers a,b from which the
-            givens rotator R ∈ SO(ℝ,2) is calculated by the
-            relation 
-            
-            R.matvec([a,b].transpose()) = [r,0].transpose().
-            
-         - provide two numbers c,s which are supposed to be
-           cos(phi) and sin(phi). 
+          - Provide the angle phi            
+          - provide two numbers c,s which are supposed to be
+            cos(phi) and sin(phi). 
 
         If no dimension is given it will be assumed to be 3.
         The parameter copy is set False if one wants to manipulate
@@ -324,6 +318,8 @@ class GivensRotator(MathOperator):
         
         self.i = i
         self.j = j
+        if i == j:
+            raise ValueError("Error: Givens rotation not defined for i=j!")
 
         self.shape = (dim,dim)
         self.size = dim**2
@@ -418,6 +414,8 @@ class GivensRotator(MathOperator):
         u"""
         computes the matrix vector
         product with pure Python.
+        The sign of s switches for
+        j > i.
         """
         if self.copy:
             result = np.copy(x)
@@ -426,8 +424,12 @@ class GivensRotator(MathOperator):
             
         entry_i = result[self.i]
         entry_j = result[self.j]
-        result[self.i] = self.c*entry_i - self.s*entry_j
-        result[self.j] = self.c*entry_j + self.s*entry_i
+        if self.j < self.i:
+            result[self.i] = self.c*entry_i - self.s*entry_j
+            result[self.j] = self.c*entry_j + self.s*entry_i
+        else:
+            result[self.i] = self.c*entry_i + self.s*entry_j
+            result[self.j] = self.c*entry_j - self.s*entry_i
 
         return result
 
@@ -471,7 +473,8 @@ class GivensRotations(MathOperator):
 
         else:
             # make the copy parameter uniform
-            rotations = [G.setCopy(copy) for G in rotations]
+            for G in rotations:
+                G.setCopy(copy)
             # check if all dimensions are correct
             if not all([G.shape[0] is dim for G in rotations]):
                 raise ValueError("Error: There are rotations with wrong dimension!")
@@ -493,6 +496,9 @@ class GivensRotations(MathOperator):
             self._fallback()
 
 
+    def getRotations(self):
+        return self._rotations
+            
     def transpose(self):
         u"""
         returns the transposed operator, by using the
@@ -573,7 +579,9 @@ class GivensRotations(MathOperator):
 
     def setCopy(self,copy):
         self.copy = copy
-
+        liste=self.getRotations()
+        for G in liste:
+            G.setCopy(copy)
     
     def _pyComputeRotationParameters(self,a,b):
         u"""

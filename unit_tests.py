@@ -189,10 +189,17 @@ class TypeTests2(object):
         c = cos(phi)
         s = sin(phi)
         G = eye(dim)
-        G[i,i] = c
-        G[j,j] = c
-        G[i,j] = -s
-        G[j,i] = s
+        if j < i:
+            G[i,i] = c
+            G[j,j] = c
+            G[i,j] = -s
+            G[j,i] = s
+        else:
+            G[i,i] = c
+            G[j,j] = c
+            G[i,j] = s
+            G[j,i] = -s
+
         return G
         
     def testGivensmatvec(self,i,j,phi,dim):
@@ -259,6 +266,12 @@ class TypeTests2(object):
         except ValueError:
             passed += [True]
         try:
+            GivensRotator(1,1,0.5)
+            passed += [False]
+        except ValueError:
+            passed += [True]
+
+        try:
             GivensRotator(0,1,0.5,dim=1)
             passed += [False]
         except ValueError:
@@ -290,7 +303,8 @@ class TypeTests2(object):
                 test_vals = [self.testGivensmatvec(i,j,phi,dim) 
                              for i in range(dim)
                              for j in range(dim)
-                             if i > j]
+                             if i != j
+                             ]
                 assert all(test_vals)
                 passed += [True]
 
@@ -301,7 +315,8 @@ class TypeTests2(object):
                 test_vals = [self.testGivensmatmat(i,j,phi,dim) 
                              for i in range(dim)
                              for j in range(dim)
-                             if i > j]
+                             if i != j
+                             ]
                 assert all(test_vals)
                 passed += [True]
 
@@ -312,7 +327,7 @@ class TypeTests2(object):
                 test_vals = [self.testGivensmattrans(i,j,phi,dim) 
                              for i in range(dim)
                              for j in range(dim)
-                             if i > j]
+                             if i != j]
                 assert all(test_vals)
                 passed += [True]
 
@@ -334,7 +349,7 @@ class TypeTests2(object):
         return Qmat, R 
         
     def testGivensRotations(self):
-
+        from Types import GivensRotator
         from Types import GivensRotations
         pi = np.pi
         from numpy import sqrt, cos, sin, abs
@@ -347,8 +362,38 @@ class TypeTests2(object):
             rotDummy.matvec
             rotDummy.computeRotation
             rotDummy.computeRotationParameters
+            # test if initiated with unit matrix
+            test_matrix = np.random.rand(*(rotDummy.shape))
+            assert norm(rotDummy(test_matrix)-test_matrix) < eps
         passed[0] = True
+        # test list creation
+        try:
+            liste = [GivensRotator(0,1,2,dim=2),GivensRotator(0,1,2,dim=3)]
+            GivensRotations(liste)
+            passed += [False]
+        except ValueError:
+            passed += [True]
+        liste = [GivensRotator(0,1,2,copy=False),GivensRotator(0,1,2,copy=False)]
+        rot1 = GivensRotations(liste,copy=True)
+        liste2 = rot1.getRotations()
+        liste2 = [G.copy for G in liste2]
+        passed += [all(liste2)]
+        # test setCopy method
+        rot1.setCopy(False)
+        liste2 = rot1.getRotations()
+        passed += [not rot1.copy] + [not G.copy for G in liste2]
+
+        # test inversion and transponation (and indirectly matvec mult)
+        # test if initiated with unit matrix
+        # for dim in range(2,nr_tests//2):
+        #     phis = np.random.rand(dim)
+        #     liste = []
+        #     liste = [GivensRotator(i,j,phis[i]) for i in range(dim) for j in range(i,dim) if i > j]
+        #     rot2 = 
+        # test_matrix = np.random.rand(*(rotDummy.shape))
+        # assert norm(rotDummy(test_matrix)-test_matrix) < eps
         
+        self.checkTests("GivensRotations",passed)
         
     def __init__(self):
         """
