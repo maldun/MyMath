@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# MyGeom Module - API for easier Salome geompy usage
-# Tools.py: Tool functions for MyGeom module
+# MyMath Module - API for easier Salome geompy usage
+# Types.py: Math Operators and other types for MyMath module
 #
 # Copyright (C) 2015  Stefan Reiterer - stefan.harald.reiterer@gmail.com
 #
