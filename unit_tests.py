@@ -419,18 +419,58 @@ class TypeTests2(object):
                 assert norm(Q(R)-A) < eps
         self.checkTests("GivensRotations",passed)
         
-    def __init__(self):
+    def __init__(self,nr_tests):
         """
         Method for executing tests.
         """
         self.fallback_warning = "Warning: Make fallback since no other version is implemented!"
-        self.nr_tests = 10
-        
+        self.nr_tests = nr_tests
+
+        print("Start Type Tests 2...")
         self.testPolarCoordinates()
         self.testCartesianCoordinates()
         self.testSphericalCoordinates()
         self.testCartesianCoordinates3D()
         self.testGivensRotator()
         self.testGivensRotations()
+
+
+class ToolTests(object):
+
+    def testGivensQR(self):
+        from Tools import givens_qr
+        givens_message =  "Warning: Dimension < 2! Q is scalar not GivensRotation!"
+        # test special case for dim = 1
+        with warnings.catch_warnings(record=True) as warn:
+            A1 = np.array([[1.0]])
+            Q1,R1 = givens_qr(A)
+            assert issubclass(warn[-1].category, UserWarning)
+            assert givens_message in str(warn[-1].message)
+            assert Q1 == np.array([[1.0]])
+            assert R1 == A1
+
+        with warnings.catch_warnings(record=True) as warn:
+            A1 = np.array([[1.0,1.0,1.0]])
+            Q1,R1 = givens_qr(A)
+            assert issubclass(warn[-1].category, UserWarning)
+            assert givens_message in str(warn[-1].message)
+            assert Q1 == np.array([[1.0]])
+            assert R1 == A1
+
+            
+        for i in range(2,self.nr_tests):
+            for j in range(2,self.nr_tests):
+                pass 
+
+
+    def __init__(self,nr_tests):
+
+        self.nr_tests = nr_tests
         
-TypeTests2()
+        print("Start Tool Tests ...")
+        self.testGivensQR()
+
+
+nr_tests = 10
+TypeTests2(nr_tests)
+ToolTests(nr_tests)
