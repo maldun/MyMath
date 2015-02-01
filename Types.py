@@ -325,12 +325,13 @@ class GivensRotator(MathOperator):
         self.shape = (dim,dim)
         self.size = dim**2
         
-        self.setCosAndSine(c_or_phi)
+        self.setCosAndSine(c_or_phi,s)
         self.copy = copy
 
         if method is 0:
             self.matvec = self._pyMatvec
             self._operation = self._pythonOP
+            self.computePhi = self._pyComputePhi
         else:
             self._fallback()
 
@@ -363,24 +364,40 @@ class GivensRotator(MathOperator):
         We compute phi by the fact that
         it is uniquely defined by the unit
         vector [c,s] on S¹ with help of arctan2.
+        Meta Method.
         """
-        if not (c**2 + s**2 < 1 + eps):
+        raise NotImplementedError("Error: matvec method not set yet!")
+
+    def _pyComputePhi(self,c,s):
+        u"""
+        We compute phi by the fact that
+        it is uniquely defined by the unit
+        vector [c,s] on S¹ with help of arctan2.
+        """
+
+        if np.abs(c**2 + s**2 - 1.0) >= eps:
             raise ValueError("Error: Input numbers are not on unit sphere!")
 
         return np.arctan2(s,c)
 
+    def getPhi(self):
+        u"""
+        Returns the unique angle phi defined by c and s.
+        """
+        return self.computePhi(self.c,self.s)
+    
     def setCosAndSine(self,c_or_phi,s=None):
         u"""
         If s is None c is assumed to be the angle phi,
         else it is assumed to be cos(phi).
         """
         if s is None:
-            self.c, self.s = self.computeCSFromPhi(c_or_phi)
-        
-        if not (c_or_phi**2 + s**2 < 1 + eps):
-            raise ValueError("Error: Input numbers are not on unit sphere!")
-        self.c = c_or_phi
-        self.s = s
+            self.c, self.s = self.computeCosAndSine(c_or_phi)
+        else:
+            if np.abs(c_or_phi**2 + s**2-1.0) >= eps:
+                raise ValueError("Error: Input numbers are not on unit sphere!")
+            self.c = c_or_phi
+            self.s = s
 
     def _pythonOP(self,A):
         u"""

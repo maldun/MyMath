@@ -187,11 +187,35 @@ class TypeTests2(object):
 
         from Types import GivensRotator
         pi = np.pi
-        from numpy import sqrt, cos, sin
-        
+        from numpy import sqrt, cos, sin, abs
         passed = [False]
+        # test creation
+        with warnings.catch_warnings(record=True) as warn:
+            rotDummy = GivensRotator(0,1,0.0,method=666)
+            assert issubclass(warn[-1].category, UserWarning)
+            assert self.fallback_warning in str(warn[-1].message)
+        passed[0] = True
 
-        
+        # Check creation
+        rot1 = GivensRotator(0,1,0.0)
+        assert abs(rot1.c-1.0) < eps
+        assert abs(rot1.s) < eps
+        rot2 = GivensRotator(0,1,pi/2)
+        assert abs(rot2.c-0.0) < eps
+        assert abs(rot2.s-1.0) < eps
+        rot3 = GivensRotator(0,1,sqrt(0.5),sqrt(0.5))
+        assert abs(rot3.c-sqrt(0.5)) < eps
+        assert abs(rot3.s-sqrt(0.5)) < eps
+        passed += [True]
+        try:
+            GivensRotator(0,1,0.5,0.5)
+            passed += [False]
+        except ValueError:
+            passed += [True]
+        # test if phi is computd correctly 
+        assert abs(rot3.getPhi()-pi/4) < eps
+        self.checkTests("GivensRotator",passed)
+
     def __init__(self):
         """
         Method for executing tests.
@@ -203,5 +227,6 @@ class TypeTests2(object):
         self.testCartesianCoordinates()
         self.testSphericalCoordinates()
         self.testCartesianCoordinates3D()
+        self.testGivensRotator()
         
 TypeTests2()
