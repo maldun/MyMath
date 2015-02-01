@@ -691,8 +691,10 @@ class GivensQR(MathOperator):
     If transposed is True Q.transpose()
     is returned
     """
-    def __init__(self,method=0):
+    def __init__(self,method=0,copy=True):
         
+        self.method = method
+        self.copy = copy
         # If exception in creation caught make fallback
         try:
             if method is 0:
@@ -702,7 +704,7 @@ class GivensQR(MathOperator):
         except:
             self._fallback()
 
-    def _pythonOP(self,x):
+    def _pythonOP(self,A,transposed=False):
         """
         Computes the QR decomposition of
         a matrix A such that Q*R = A
@@ -716,12 +718,13 @@ class GivensQR(MathOperator):
             warnings.warn("Warning: Dimension < 2! Q is scalar not GivensRotation!",UserWarning)
             return np.array([1.0]), A
         
-        Q = Types.GivensRotations(dim=dim)
-        if copy:
+        Q = GivensRotations(dim=dim,method=self.method)
+        if self.copy:
             result = np.copy(A)
         else:
             result = A
-            cols = A.shape[1]
+
+        cols = A.shape[1]
         for i in range(cols-1):
             for j in range(i+1,dim):
                 result = Q.computeRotation(i,j,result)

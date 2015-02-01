@@ -423,10 +423,17 @@ class TypeTests2(object):
         from Types import GivensQR
         givens_message =  "Warning: Dimension < 2! Q is scalar not GivensRotation!"
         passed = [False]
+        with warnings.catch_warnings(record=True) as warn:
+            dummy_givens_qr = GivensQR(method=666)
+            assert issubclass(warn[-1].category, UserWarning)
+            assert self.fallback_warning in str(warn[-1].message)
+            passed[0] = True   
+
+        givens_qr = GivensQR()
         # test special case for dim = 1
         with warnings.catch_warnings(record=True) as warn:
             A1 = np.array([[1.0]])
-            Q1,R1 = GivensQR(A1)
+            Q1,R1 = givens_qr(A1)
             assert issubclass(warn[-1].category, UserWarning)
             assert givens_message in str(warn[-1].message)
             assert np.all(Q1 == np.array([[1.0]]))
@@ -434,17 +441,17 @@ class TypeTests2(object):
         
         with warnings.catch_warnings(record=True) as warn:
             A1 = np.array([[1.0,1.0,1.0]])
-            Q1,R1 = GivensQR(A1)
+            Q1,R1 = givens_qr(A1)
             assert issubclass(warn[-1].category, UserWarning)
             assert givens_message in str(warn[-1].message)
             assert np.all(Q1 == np.array([[1.0]]))
             assert np.all(R1 == A1)
 
-        passed[0] = True    
+         
         for i in range(2,self.nr_tests):
             for j in range(2,self.nr_tests):
                 A = np.random.rand(i,j)
-                Q,R = GivensQR(A)
+                Q,R = givens_qr(A)
                 assert norm(Q(R)-A) < eps
                 
         self.checkTests("GivensQR",passed)
@@ -464,22 +471,23 @@ class TypeTests2(object):
         self.testCartesianCoordinates3D()
         self.testGivensRotator()
         self.testGivensRotations()
+        self.testGivensQR()
 
 
-class ToolTests(object):
+# class ToolTests(object):
 
-    def checkTests(self,name,passed):
-        if not all(passed):
-            raise Exception("Error: " + name + " tests didn't passed!")
-        print("All " + name + " tests passed!")
+#     def checkTests(self,name,passed):
+#         if not all(passed):
+#             raise Exception("Error: " + name + " tests didn't passed!")
+#         print("All " + name + " tests passed!")
 
     
 
-    def __init__(self,nr_tests):
+#     def __init__(self,nr_tests):
 
-        self.nr_tests = nr_tests
+#         self.nr_tests = nr_tests
         
-        print("Start Tool Tests ...")
+#         print("Start Tool Tests ...")
 
 
 nr_tests = 10
