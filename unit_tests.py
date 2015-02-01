@@ -24,7 +24,7 @@ from __future__ import print_function
 import warnings
 import numpy as np
 from numpy import ones, dot, eye
-from numpy import cos, sin
+from numpy import cos, sin, abs
 from numpy.linalg import norm
 eps = 10*np.finfo(np.float32).eps
 import warnings
@@ -383,16 +383,33 @@ class TypeTests2(object):
         liste2 = rot1.getRotations()
         passed += [not rot1.copy] + [not G.copy for G in liste2]
 
-        # test inversion and transponation (and indirectly matvec mult)
-        # test if initiated with unit matrix
-        # for dim in range(2,nr_tests//2):
-        #     phis = np.random.rand(dim)
-        #     liste = []
-        #     liste = [GivensRotator(i,j,phis[i]) for i in range(dim) for j in range(i,dim) if i > j]
-        #     rot2 = 
-        # test_matrix = np.random.rand(*(rotDummy.shape))
-        # assert norm(rotDummy(test_matrix)-test_matrix) < eps
-        
+        #test inversion and transponation (and indirectly matvec mult)
+        for dim in range(2,self.nr_tests//2):
+            phis = np.random.rand(dim)
+            liste = []
+            liste = [GivensRotator(i,j,phis[i],dim=dim) for i in range(dim) 
+                     for j in range(i,dim) if i != j]
+            rot2 = GivensRotations(liste,dim=dim)
+            rot2Inv = rot2.inv()
+            rot2Tra = rot2.transpose()
+            test_matrix = np.random.rand(*(rot2.shape))
+            assert norm(rot2Inv(rot2(test_matrix))-test_matrix) < eps
+            assert norm(rot2Tra(rot2(test_matrix))-test_matrix) < eps
+
+        # check correctness of compute rotation method
+        rot3 = GivensRotations(dim=2)
+        Rs = np.random.rand(self.nr_tests)*10 + 1
+        Phis = 2*pi*(np.random.rand(self.nr_tests)-0.5)
+        for i in range(self.nr_tests):
+            a = Rs[i]*cos(Phis[i])
+            b = Rs[i]*sin(Phis[i])
+            c,s,r = rot3.computeRotationParameters(a,b)
+            assert abs(r - Rs[i]) < eps
+            assert abs(c - cos(Phis[i]))<eps
+            assert abs(s - sin(Phis[i]))<eps
+            assert norm(dot(np.array([[c,s],[-s,c]]),np.array([a,b]))-np.array([r,0.0]))<eps
+        passed += [True]
+            
         self.checkTests("GivensRotations",passed)
         
     def __init__(self):

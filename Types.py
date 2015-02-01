@@ -465,7 +465,7 @@ class GivensRotations(MathOperator):
         if the list of operators is empty.
         The parameters are the same as for givens operators.
         """
-
+        self.method = method
         if rotations == []:
             self._rotations = [GivensRotator(0,1,1.0,0.0,
                                          dim=dim,method=method,
@@ -508,7 +508,8 @@ class GivensRotations(MathOperator):
         rotations = rotations
         return GivensRotations(rotations=rotations,
                                dim = self.shape[0], 
-                               method = self.method, copy=self.copy)
+                               method = self.method, 
+                               copy=self.copy)
 
     def inv(self):
         u"""
@@ -613,7 +614,7 @@ class GivensRotations(MathOperator):
             c = 0
             s = -np.copysign(1,a)
             r = np.abs(b)
-        elif np.aps(b) > np.abs(a):
+        elif np.abs(b) > np.abs(a):
             t = a/b
             u = np.copysign(np.sqrt(1+t*t),b)
             s = -1/u
@@ -626,7 +627,8 @@ class GivensRotations(MathOperator):
             s = -c*t
             r = a*u
 
-        return c,s,r
+        # the sign of s in the paper is swapped from ours
+        return c,-s,r
 
     
     def _pyComputeRotation(self,i,j,A,appendRot=True,applyRot=True):
