@@ -183,6 +183,24 @@ class TypeTests2(object):
         self.checkTests("CartesianCoordinates3D",passed)
 
 
+        
+    def computeGivens(self,i,j,phi,dim):
+            c = cos(phi)
+            s = sin(phi)
+            G = eye(dim)
+            G[i,i] = c
+            G[j,j] = c
+            G[i,j] = -s
+            G[j,i] = s
+            return G
+        
+    def testGivensmatvec(self,i,j,phi,dim):
+            G1 = GivensRotator(i,j,phi,dim=dim)
+            G2 = self.computeGivens(i,j,phi,dim)
+            result = eye(dim)
+            result = np.apply_along_axis(G1.matvec,0,result)
+            result = norm(G2 - result)
+        
     def testGivensRotator(self):
 
         from Types import GivensRotator
@@ -214,8 +232,35 @@ class TypeTests2(object):
             passed += [False]
         except ValueError:
             passed += [True]
+        try:
+            GivensRotator(0,1,0.5,dim=1)
+            passed += [False]
+        except ValueError:
+            passed += [True]
+        try:
+            GivensRotator(4,1,0.5)
+            passed += [False]
+        except IndexError:
+            passed += [True]
+        try:
+            GivensRotator(1,4,0.5)
+            passed += [False]
+        except IndexError:
+            passed += [True]
+
+
+            
         # test if phi is computd correctly 
         assert abs(rot3.getPhi()-pi/4) < eps
+        # test set method
+        rot4 = GivensRotator(0,1,0.0,copy=False)
+        rot4.setCopy(True)
+        assert rot4.copy
+           
+        # test correctness of matrix vector multiplication
+        # for dim in range(2,self.nr_tests):
+        #     pass #for i in range(
+        
         self.checkTests("GivensRotator",passed)
 
     def __init__(self):

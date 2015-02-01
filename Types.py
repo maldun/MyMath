@@ -314,10 +314,13 @@ class GivensRotator(MathOperator):
         matrices in place.
         """
         self.method = method
+        
+        
         if dim < 2:
-            ValueError("Error: Dimension has to be at least of 2!")
+            raise ValueError("Error: Dimension has to be at least of 2!")
         if i > dim or j > dim:
             raise IndexError("Error: Indices are out of bounds!")
+
         
         self.i = i
         self.j = j
