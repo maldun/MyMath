@@ -675,8 +675,8 @@ class GivensRotations(MathOperator):
             result = G(A)
             # set the computed entries hard,
             # to avoid floating point errors.
-            # result[i,i] = r
-            # result[j,i] = 0
+            result[i,i] = r
+            result[j,i] = 0
 
             if appendRot:
                 return result
@@ -691,10 +691,11 @@ class GivensQR(MathOperator):
     If transposed is True Q.transpose()
     is returned
     """
-    def __init__(self,method=0,copy=True):
+    def __init__(self,method=0,copy=True,transposed=False):
         
         self.method = method
         self.copy = copy
+        self.transposed = transposed
         # If exception in creation caught make fallback
         try:
             if method is 0:
@@ -704,7 +705,7 @@ class GivensQR(MathOperator):
         except:
             self._fallback()
 
-    def _pythonOP(self,A,transposed=False):
+    def _pythonOP(self,A):
         """
         Computes the QR decomposition of
         a matrix A such that Q*R = A
@@ -730,7 +731,7 @@ class GivensQR(MathOperator):
                 result = Q.computeRotation(i,j,result)
             
         R = result
-        if transposed:
+        if self.transposed:
             return Q, R
         else:
             return Q.transpose(), R 
